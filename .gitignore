@@ -1,0 +1,7 @@
+# Ignore everything
+*/*
+/*.*
+
+# Except for journal backups
+!backup/
+!backup/journal.tar.gz.gpg
