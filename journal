@@ -1,0 +1,65 @@
+#!/bin/sh
+
+function pack () {
+  tar cz -C $JOURNAL_DIR "entries" | gpg -e -s -r $FINGERPRINT -o "$JOURNAL_DIR/backup/journal.tar.gz.gpg"
+}
+
+function unpack () {
+ gpg -d "$JOURNAL_DIR/backup/journal.tar.gz.gpg" | tar xz -C $JOURNAL_DIR
+}
+
+function pull () {
+  git -C $JOURNAL_DIR pull
+}
+
+function push () {
+  pushd $JOURNAL_DIR > /dev/null
+  git -C $JOURNAL_DIR add .
+  if [[ $(git status -s) ]]; then
+    git -C $JOURNAL_DIR commit -m "Journal Backup @ $(date -u +'%F %H:%M:%S')"
+    git -C $JOURNAL_DIR push
+  fi
+  popd > /dev/null
+}
+
+function sync () {
+  pull
+  push
+}
+
+function backup () {
+  sync
+  pack
+  push
+}
+
+function continue_entry () {
+  year_folder=$JOURNAL_DIR/entries/$(date +%Y)
+  most_recent_entry=$(ls -Art $year_folder | tail -n 1)
+  ${VISUAL:-$EDITOR} $year_folder/$most_recent_entry
+}
+
+function create_entry () {
+  year_folder="$JOURNAL_DIR/entries/$(date +%Y)"
+  mkdir -p $year_folder
+  if [ -n "$1" ]; then
+    title="-$1"
+  else
+    title=""
+  fi
+  ${VISUAL:-$EDITOR} "$year_folder/$(date -u +%F-%H-%M-%S)$title.md"
+}
+
+case $1 in
+  "pack") pack;;
+  "unpack") unpack;;
+  "pull") pull;;
+  "push") push;;
+  "sync") sync;;
+  "backup") backup;;
+  "continue") continue_entry;;
+  "log") create_entry $2;;
+  "add") create_entry $2;;
+  "new") create_entry $2;;
+  *) create_entry $1;;
+esac
