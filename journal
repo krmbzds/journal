@@ -58,6 +58,7 @@ case $1 in
   "sync") sync;;
   "backup") backup;;
   "continue") continue_entry;;
+  "latest") continue_entry;;
   "log") create_entry $2;;
   "add") create_entry $2;;
   "new") create_entry $2;;
